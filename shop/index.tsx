@@ -32,9 +32,9 @@ import {
 // 2. Paste your shop domain (e.g. 'mystore.myshopify.com') and token below.
 // 3. Ensure your products have tags like 'theme:purple', 'theme:cyan', 'theme:orange' for styling.
 const SHOPIFY_SETUP = {
-    domain: '', // e.g. 'your-brand.myshopify.com'
-    storefrontAccessToken: '', // e.g. 'shpat_xxxxxxxxxxxxxxxxxxxxxxxxxxxx'
-    apiVersion: '2024-01'
+    domain: (import.meta.env.VITE_SHOPIFY_STORE_DOMAIN || '').trim(), // e.g. 'your-brand.myshopify.com'
+    storefrontAccessToken: (import.meta.env.VITE_SHOPIFY_STOREFRONT_TOKEN || '').trim(), // e.g. 'shpat_xxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+    apiVersion: (import.meta.env.VITE_SHOPIFY_API_VERSION || '').trim() || '2024-01'
 };
 
 // --- App Customization ---
@@ -44,12 +44,12 @@ const APP_CONFIG = {
     // These items appear in the left sidebar menu
     menuItems: [
         'New Arrivals',
-        'Best Sellers',
-        'Streetwear',
-        'Techwear',
+        'Outerwear',
+        'Tops',
+        'Bottoms',
+        'Footwear',
         'Accessories',
-        'Sale',
-        'Community'
+        'Archive'
     ],
     // These options appear in the filter dropdown
     sortOptions: [
@@ -333,8 +333,25 @@ const SetupGuide = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                             <span className="text-purple-400">const</span> <span className="text-yellow-200">SHOPIFY_SETUP</span> = {'{'}<br/>
                             &nbsp;&nbsp;domain: <span className="text-green-400">'your-store.myshopify.com'</span>,<br/>
                             &nbsp;&nbsp;storefrontAccessToken: <span className="text-green-400">'your-public-access-token'</span>,<br/>
-                            &nbsp;&nbsp;apiVersion: <span className="text-green-400">'2024-01'</span><br/>
+                            &nbsp;&nbsp;apiVersion: <span className="text-green-400">'2026-01'</span><br/>
                             {'}'};
+                        </div>
+                        <div className="mt-4 bg-black/40 p-4 rounded-xl border border-cyan-500/20 text-xs text-slate-200 space-y-2">
+                            <div className="font-semibold text-cyan-300">Storefront scopes to enable:</div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-slate-300">
+                                <span>unauthenticated_read_product_listings</span>
+                                <span>unauthenticated_read_product_inventory</span>
+                                <span>unauthenticated_read_product_tags</span>
+                                <span>unauthenticated_read_product_pickup_locations</span>
+                                <span>unauthenticated_read_customers</span>
+                                <span>unauthenticated_write_customers</span>
+                                <span>unauthenticated_read_customer_tags</span>
+                                <span>unauthenticated_read_content</span>
+                                <span>unauthenticated_read_checkouts</span>
+                                <span>unauthenticated_write_checkouts</span>
+                                <span>unauthenticated_read_selling_plans</span>
+                                <span>unauthenticated_read_metaobjects</span>
+                            </div>
                         </div>
                     </section>
 
@@ -709,6 +726,8 @@ const QuickViewModal: React.FC<{
                                     </div>
                                 </div>
                                 <textarea
+                                    name="review"
+                                    id="review"
                                     value={comment}
                                     onChange={(e) => setComment(e.target.value)}
                                     placeholder="Share your thoughts..."

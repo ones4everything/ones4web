@@ -70,7 +70,7 @@ export const OptionsPanel: React.FC<OptionsPanelProps> = ({ visible }) => {
               
               <CategoryItem y={0.16} label="WINTER CORE" count="12 ITEMS" active />
               <CategoryItem y={0.07} label="MODULAR TECH" count="8 ITEMS" />
-              <CategoryItem y={-0.02} label="FOOTWEAR" count="5 ITEMS" />
+              <CategoryItem y={-0.02} label="BAGS" count="5 ITEMS" />
               <CategoryItem y={-0.11} label="ACCESSORIES" count="24 ITEMS" />
               <CategoryItem y={-0.20} label="ARCHIVE" count="VAULT" />
               

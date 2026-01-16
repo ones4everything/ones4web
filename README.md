@@ -22,10 +22,19 @@ By default, the app runs in **Demo Mode** using static data. To connect your rea
 1. Log in to your **Shopify Admin**.
 2. Go to **Settings > Apps and sales channels > Develop apps**.
 3. Click **Create an app** (name it "ONES4 Headless").
-4. Click **Configure Storefront API scopes** and select:
+4. Click **Configure Storefront API scopes** and select all of:
    - `unauthenticated_read_product_listings`
-   - `unauthenticated_read_products`
+   - `unauthenticated_read_product_inventory`
+   - `unauthenticated_read_product_tags`
+   - `unauthenticated_read_product_pickup_locations`
+   - `unauthenticated_read_customers`
+   - `unauthenticated_write_customers`
+   - `unauthenticated_read_customer_tags`
+   - `unauthenticated_read_content`
+   - `unauthenticated_read_checkouts`
    - `unauthenticated_write_checkouts`
+   - `unauthenticated_read_selling_plans`
+   - `unauthenticated_read_metaobjects`
 5. Click **Install app**.
 6. Reveal and copy the **Storefront API Access Token**.
 
@@ -41,7 +50,7 @@ export const SHOPIFY_CONFIG = {
   // The token you copied in Step A
   storefrontAccessToken: 'shpat_xxxxxxxxxxxxxxxxxxxxxxxx',
   
-  apiVersion: '2024-01',
+  apiVersion: '2026-01',
 };
 ```
 

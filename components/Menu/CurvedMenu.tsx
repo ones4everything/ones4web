@@ -54,10 +54,7 @@ const NotificationToast = ({ message }: { message: string | null }) => {
 export const CurvedMenu: React.FC = () => {
   const { viewport } = useThree();
   const [activeItem, setActiveItem] = useState<'none' | 'search' | 'cart' | 'options' | 'products'>('none');
-  const [cartItems, setCartItems] = useState<CartItemData[]>([
-      { id: 'init-1', label: "NEO RUNNER", price: 450 },
-      { id: 'init-2', label: "VOID JACKET", price: 1200 },
-  ]);
+  const [cartItems, setCartItems] = useState<CartItemData[]>([]);
   const [notification, setNotification] = useState<string | null>(null);
   
   // Animation Refs

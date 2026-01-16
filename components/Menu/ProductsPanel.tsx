@@ -48,64 +48,12 @@ const LoadingPlaceholder = () => (
     </mesh>
 );
 
-// --- STATIC FALLBACK DATA (Used if no Shopify keys are present) ---
-const STATIC_PRODUCT_DATA = [
-    {
-        id: 'p1',
-        label: 'AETHER ORB',
-        price: '$850',
-        priceVal: 850,
-        imageUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=400&auto=format&fit=crop',
-        variantId: 'mock_v1'
-    },
-    {
-        id: 'p2',
-        label: 'CHRONO CUBE',
-        price: '$2,400',
-        priceVal: 2400,
-        imageUrl: 'https://images.unsplash.com/photo-1618005198919-d3d4b5a92ead?q=80&w=400&auto=format&fit=crop',
-        variantId: 'mock_v2'
-    },
-    {
-        id: 'p3',
-        label: 'VOID KNOT',
-        price: '$1,100',
-        priceVal: 1100,
-        imageUrl: 'https://images.unsplash.com/photo-1614728263952-84ea256f9679?q=80&w=400&auto=format&fit=crop',
-        variantId: 'mock_v3'
-    },
-    {
-        id: 'p4',
-        label: 'NEON SHARD',
-        price: '$950',
-        priceVal: 950,
-        imageUrl: 'https://images.unsplash.com/photo-1563089145-599997674d42?q=80&w=400&auto=format&fit=crop',
-        variantId: 'mock_v4'
-    },
-    {
-        id: 'p5',
-        label: 'FLUX ENGINE',
-        price: '$3,200',
-        priceVal: 3200,
-        imageUrl: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=400&auto=format&fit=crop',
-        variantId: 'mock_v5'
-    },
-    {
-        id: 'p6',
-        label: 'QUANTUM LOOP',
-        price: '$1,800',
-        priceVal: 1800,
-        imageUrl: 'https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?q=80&w=400&auto=format&fit=crop',
-        variantId: 'mock_v6'
-    }
-];
-
 const ProductCard = ({ 
     item,
     onAdd,
     isFocused
 }: { 
-    item: ShopifyProduct | typeof STATIC_PRODUCT_DATA[0],
+    item: ShopifyProduct,
     onAdd: (item: { label: string, price: number, variantId?: string }) => void,
     isFocused?: boolean
 }) => {
@@ -192,8 +140,9 @@ export const ProductsPanel: React.FC<ProductsPanelProps> = ({ visible, onAddToCa
   const opacityRef = useRef(0);
   
   // Data State
-  const [products, setProducts] = useState<any[]>(STATIC_PRODUCT_DATA);
+  const [products, setProducts] = useState<ShopifyProduct[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Carousel State
   const [targetIndex, setTargetIndex] = useState(0);
@@ -203,29 +152,63 @@ export const ProductsPanel: React.FC<ProductsPanelProps> = ({ visible, onAddToCa
 
   // Fetch Data Effect
   useEffect(() => {
+    let cancelled = false;
+
     async function loadProducts() {
-        if (!IS_SHOPIFY_LIVE) return;
-        
-        setLoading(true);
-        try {
-            const data = await shopifyFetch(PRODUCTS_QUERY, { first: 20 });
-            const formatted = data.products.edges.map((edge: any) => formatShopifyProduct(edge.node));
-            setProducts(formatted);
-        } catch (e) {
-            console.error("Shopify fetch failed, using static data", e);
-        } finally {
-            setLoading(false);
+      if (!IS_SHOPIFY_LIVE) {
+        setProducts([]);
+        setError("Shopify is not configured.");
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await shopifyFetch(PRODUCTS_QUERY, { first: 20 });
+        const formatted = data.products.edges.map((edge: any) => formatShopifyProduct(edge.node));
+        if (!cancelled) {
+          setProducts(formatted);
+          if (formatted.length === 0) {
+            setError("No products published yet.");
+          }
         }
+      } catch (e) {
+        if (!cancelled) {
+          console.error("Shopify fetch failed", e);
+          setProducts([]);
+          setError("Failed to load products.");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     }
 
-    if (visible && IS_SHOPIFY_LIVE && products === STATIC_PRODUCT_DATA) {
-        loadProducts();
+    if (visible) {
+      loadProducts();
     }
-  }, [visible, products]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [visible]);
+
+  useEffect(() => {
+    if (products.length === 0) {
+      setTargetIndex(0);
+      currentIndex.current = 0;
+      setFocusedIndex(0);
+      return;
+    }
+
+    if (targetIndex > products.length - 1) {
+      setTargetIndex(products.length - 1);
+    }
+  }, [products, targetIndex]);
 
   // Scroll Handling
   const handleWheel = (e: ThreeEvent<WheelEvent>) => {
       e.stopPropagation(); 
+      if (products.length < 2) return;
       if (Math.abs(e.deltaY) > 20) {
           const direction = Math.sign(e.deltaY);
           const newIndex = MathUtils.clamp(targetIndex + direction, 0, products.length - 1);
@@ -256,7 +239,7 @@ export const ProductsPanel: React.FC<ProductsPanelProps> = ({ visible, onAddToCa
             setFocusedIndex(roundedIndex);
           }
 
-          if (listRef.current) {
+          if (listRef.current && products.length > 0) {
              listRef.current.children.forEach((child, i) => {
                  const offset = i - currentIndex.current;
                  const absOffset = Math.abs(offset);
@@ -324,10 +307,10 @@ export const ProductsPanel: React.FC<ProductsPanelProps> = ({ visible, onAddToCa
         <group ref={animGroup}>
             {/* Header */}
             <Text position={[0, 0.35, 0]} fontSize={0.025} color="#fff" letterSpacing={0.2} fillOpacity={0.7}>
-                {loading ? "CONNECTING TO MAINFRAME..." : "FEATURED COLLECTION"}
+                {loading ? "CONNECTING TO MAINFRAME..." : products.length > 0 ? "FEATURED COLLECTION" : "NO PRODUCTS"}
             </Text>
             <Text position={[0, 0.31, 0]} fontSize={0.015} color="#a855f7" letterSpacing={0.1}>
-                 {Math.round(currentIndex.current) + 1} / {products.length}
+                 {products.length > 0 ? Math.round(currentIndex.current) + 1 : 0} / {products.length}
             </Text>
             
             {/* HIT PLANE */}
@@ -353,7 +336,7 @@ export const ProductsPanel: React.FC<ProductsPanelProps> = ({ visible, onAddToCa
 
             {/* Hint */}
             <Text position={[0, -0.35, 0]} fontSize={0.012} color="#666" letterSpacing={0.1}>
-                SCROLL TO BROWSE
+                {products.length > 0 ? "SCROLL TO BROWSE" : error ?? "PUBLISH PRODUCTS IN SHOPIFY"}
             </Text>
         </group>
     </group>
